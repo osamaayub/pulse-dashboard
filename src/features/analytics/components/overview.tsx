@@ -48,7 +48,7 @@ export async function Overview({ range }: { range: Range }) {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <Panel title="Top products">
+        <Panel title="Top products" action={<Link href={`/products${range === "30d" ? "" : `?range=${range}`}`} className="text-sm font-medium text-brand hover:underline">View all</Link>}>
           <ol className="divide-y divide-line">
             {top.map((p, i) => (
               <li key={p.name} className="flex items-center gap-3 py-2.5">
@@ -63,7 +63,7 @@ export async function Overview({ range }: { range: Range }) {
           <ul className="divide-y divide-line">
             {recent.map((o) => (
               <li key={o.id} className="flex items-center gap-3 py-2.5 text-sm">
-                <span className="num w-16 text-muted">#{o.id}</span>
+                <Link href={`/orders/${o.id}`} className="num w-16 font-medium text-brand hover:underline">#{o.id}</Link>
                 <span className="min-w-0 flex-1 truncate font-medium">{o.customer}</span>
                 <StatusBadge status={o.status} />
                 <span className="num w-20 text-right font-semibold">{money(o.totalCents)}</span>
