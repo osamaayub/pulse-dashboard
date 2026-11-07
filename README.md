@@ -4,7 +4,7 @@
 
 ### A Next.js 16 admin dashboard on real PostgreSQL
 
-KPIs that compare with the last period, revenue charts, and an orders table you can search, filter, sort, page, export and update.
+KPIs that compare with the last period, revenue charts, orders you can search, filter, export, ship and refund, customers with lifetime value, and product performance.
 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-000?logo=nextdotjs)](https://nextjs.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org)
@@ -28,6 +28,7 @@ KPIs that compare with the last period, revenue charts, and an orders table you 
 - [Project structure](#project-structure)
 - [Security and quality](#security-and-quality)
 - [Deploy](#deploy)
+- [Pages](#pages)
 - [Practise](#practise)
 
 ## Features
@@ -39,7 +40,10 @@ KPIs that compare with the last period, revenue charts, and an orders table you 
 | **Charts** | Revenue over time (day, week or month buckets, gaps filled with zero) and revenue by category |
 | **Orders table** | Search by name, email or `#order`, filter by status, sort by date or total, 12 rows per page |
 | **All in SQL** | Filtering, sorting, counting and paging run in PostgreSQL; the browser gets one page of rows |
-| **Mark shipped** | A Server Action with `useActionState`. The status check is inside the `UPDATE`, so double clicks are safe |
+| **Order page** | Line items, customer, progress, and **Mark shipped** / **Refund** Server Actions. The status check is inside the `UPDATE`, so double clicks are safe |
+| **Customers** | Lifetime value, order count and last order for every customer, with search, sorting, paging and repeat-customer rate |
+| **Customer page** | Totals, full order history and spend by category |
+| **Products** | Units, revenue, change vs the previous period and share of revenue per product, filtered by date range and category |
 | **CSV export** | Downloads the current filtered view, with cells that spreadsheets can't run as formulas |
 | **Real PostgreSQL** | `DATABASE_URL` or Netlify Database; creates its own tables and demo data on first start. Falls back to a built-in demo database |
 
@@ -131,18 +135,20 @@ The code is split by **feature**, not by file type. Everything about orders (its
 ```mermaid
 flowchart TB
     subgraph app["app/  (routes: thin, no logic)"]
-      R1["page.tsx"]; R2["orders/page.tsx"]; R3["api/orders/export"]
+      R1["page.tsx"]; R2["orders, orders/[id]"]; R3["api/orders/export"]; R4["customers, customers/[id]"]; R5["products"]
     end
     subgraph features["features/  (business logic + UI per feature)"]
       A["analytics<br/>range · queries · overview · charts"]
       O["orders<br/>params · queries · actions · csv · table"]
+      C["customers<br/>params · queries · table · detail"]
+      PR["products<br/>params · queries · table"]
     end
     subgraph server["server/  (infrastructure)"]
       DB["db.ts: Postgres pool or demo DB"]; ENV["env.ts: validated config"]; SC["schema.ts · ddl.ts · seed.ts"]
     end
     LIB["lib/  (pure helpers: format, url)"]
-    R1 --> A; R2 --> O; R3 --> O; A --> O
-    A --> DB; O --> DB; DB --> ENV; DB --> SC
+    R1 --> A; R2 --> O; R3 --> O; R4 --> C; R5 --> PR; A --> O; C --> O
+    A --> DB; O --> DB; C --> DB; PR --> DB; DB --> ENV; DB --> SC
     A --> LIB; O --> LIB
 ```
 
@@ -162,41 +168,53 @@ Rules the code follows:
 src/
 ├── app/                              # Routes only: parse the URL, render a feature
 │   ├── page.tsx
-│   ├── orders/page.tsx
-│   └── api/orders/export/route.ts    # CSV download
+│   ├── orders/page.tsx, orders/[id]/page.tsx
+│   ├── customers/page.tsx, customers/[id]/page.tsx
+│   ├── products/page.tsx
+│   └── api/orders/export/route.ts    # CSV download (one query, every matching row)
 ├── features/
 │   ├── analytics/
 │   │   ├── range.ts                  # ?range= schema, date windows, % change
 │   │   ├── queries.ts                # KPIs, revenue series, categories, top products
 │   │   └── components/               # overview.tsx, charts.tsx (Recharts, client)
-│   └── orders/
-│       ├── params.ts                 # ?q=&status=&sort=&page= schema
-│       ├── queries.ts                # search, filter, sort, paginate in SQL
-│       ├── actions.ts                # "Mark shipped" Server Action
-│       ├── csv.ts                    # formula-safe CSV cells
-│       └── components/               # orders-table, search-box, ship-button, status-badge
+│   ├── orders/
+│   │   ├── params.ts                 # ?q=&status=&sort=&page= schema
+│   │   ├── queries.ts                # list, export and one order with its items
+│   │   ├── actions.ts                # "Mark shipped" and "Refund" Server Actions
+│   │   ├── csv.ts                    # formula-safe CSV cells
+│   │   └── components/               # orders-table, order-detail, ship-button, refund-button, status-badge
+│   ├── customers/
+│   │   ├── params.ts                 # ?q=&sort=&dir=&page= schema
+│   │   ├── queries.ts                # lifetime value, summary, one customer
+│   │   └── components/               # customers-table, customer-summary, customer-detail
+│   └── products/
+│       ├── params.ts                 # ?range=&category=&sort= schema
+│       ├── queries.ts                # sales per product, this period vs the last
+│       └── components/               # products-table
 ├── server/
 │   ├── db.ts                         # Postgres pool + first-start setup, or the demo database
 │   ├── env.ts                        # Environment variables, validated with Zod
 │   ├── schema.ts                     # Tables for Drizzle
 │   ├── ddl.ts                        # The same tables as SQL (used by db:setup)
 │   └── seed.ts                       # Deterministic two-year demo store
-├── components/                       # App shell: sidebar, panels, pills
-└── lib/                              # format.ts, url.ts
+├── components/                       # App shell: sidebar, search box, panels, pills
+└── lib/                              # format.ts, url.ts, search.ts
 scripts/db-setup.mjs                  # npm run db:setup
 netlify/database/migrations/          # tables for Netlify Database
-test/                                 # params, dates, deltas, seed, CSV
+test/                                 # params, dates, deltas, seed, search, CSV
+vitest.config.mts                     # same @/ alias as the app
 ```
 
 ## Security and quality
 
 - Security headers on every response (`nosniff`, `DENY` framing, strict referrer, permissions policy)
 - Every URL param and form value is validated with Zod
-- The ship action can only move `paid` orders to `shipped`, checked inside the SQL `UPDATE`
+- Ship moves only `paid` orders and Refund only `paid` or `shipped` ones, checked inside the SQL `UPDATE`
+- Refunds take two clicks (ask, then confirm) with no browser pop-up
 - CSV cells starting with `=`, `+`, `-` or `@` are escaped, so a customer name can't run a spreadsheet formula
 - TLS is required for remote databases
 - Environment variables validated at startup (`src/server/env.ts`)
-- Tests (Vitest) for param parsing, date windows, deltas, seed consistency and CSV safety
+- Tests (Vitest) for param parsing, date windows, deltas, seed consistency, search escaping and CSV safety
 - Keyboard focus styles, labelled controls, reduced-motion support
 
 ```bash
@@ -221,10 +239,22 @@ Which database runs, in order: `DATABASE_URL`, then `NETLIFY_DB_URL`, then the b
 
 GitHub Pages can't host this app, because it runs server code and a database. The code lives on GitHub; the app runs on Netlify or Vercel.
 
+## Pages
+
+| Page | URL | What you can do |
+| --- | --- | --- |
+| Overview | `/?range=30d` | KPIs vs the previous period, revenue chart, categories, top products, latest orders |
+| Orders | `/orders?status=paid&q=khan` | Search, filter, sort, page, export CSV, mark shipped |
+| Order | `/orders/3892` | Items, customer, progress, ship or refund |
+| Customers | `/customers?sort=orders` | Lifetime value, order count, last order, repeat rate |
+| Customer | `/customers/5` | Totals, order history, spend by category |
+| Products | `/products?range=90d&category=Bags` | Units, revenue, growth and share per product |
+| Health | `/api/health` | Which database is in use, order count, PostgreSQL version |
+
 ## Practise
 
-1. Add a Customers page with lifetime value per customer.
-2. Add a custom date range picker.
+1. Add a custom date range picker.
+2. Add notes to an order (a new table and a Server Action).
 3. Add sign-in so only admins can see the dashboard. (Video: sign in with GitHub and Google in Next.js 16.)
 
 ## Author
