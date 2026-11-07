@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { delta, ordersQuerySchema, periods, rangeSchema, withParams } from "../src/lib/params";
+import { delta, periods, rangeSchema } from "../src/features/analytics/range";
+import { ordersQuerySchema } from "../src/features/orders/params";
+import { withParams } from "../src/lib/url";
 import { buildSeed } from "../src/server/seed";
 
 describe("URL params are parsed safely", () => {
