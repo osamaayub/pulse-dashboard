@@ -13,8 +13,7 @@ export async function GET(req: Request) {
     return new Response(lines.join("\r\n") + "\r\n", {
       headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="orders-${day}.csv"`, "Cache-Control": "no-store" },
     });
-  } catch (e) {
-    console.error("CSV export failed", e);
+  } catch {
     return Response.json({ error: "Export failed. Open /api/health to check the database." }, { status: 500 });
   }
 }
