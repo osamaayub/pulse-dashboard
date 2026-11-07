@@ -18,3 +18,6 @@ function pick() {
 }
 
 export const database = pick();
+
+/** Sample data is replaced with a fresh copy this often (hours). 0 turns it off. Only ever applies to the app's own sample data. */
+export const demoResetHours = z.coerce.number().min(0).max(24 * 30).catch(24).parse(process.env.DEMO_RESET_HOURS ?? 24);

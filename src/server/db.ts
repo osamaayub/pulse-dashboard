@@ -2,13 +2,14 @@ import "server-only";
 import { sql } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import { DDL } from "./ddl";
-import { database } from "./env";
+import { insertSample, resetSample, stampIfMissing } from "./demo";
+import { resetDue } from "./demo-rules";
+import { database, demoResetHours } from "./env";
 import * as schema from "./schema";
-import { buildSeed } from "./seed";
 
 export type DB = PgDatabase<PgQueryResultHKT, typeof schema>;
 
-/** Creates the tables if they're missing and adds demo data if the store is empty. Safe to run on every cold start. */
+/** Creates the tables if they're missing and adds sample data if the store is empty. Safe to run on every cold start. */
 async function prepare(db: DB) {
   await db.transaction(async (tx) => {
     // One server at a time: parallel cold starts wait here instead of seeding twice.
@@ -16,14 +17,9 @@ async function prepare(db: DB) {
     // One statement per call: PGlite (and some poolers) reject several statements in one query.
     for (const stmt of DDL.split("\n").map((l) => l.trim()).filter(Boolean)) await tx.execute(sql.raw(stmt));
     const res = (await tx.execute(sql`SELECT count(*)::int AS n FROM orders`)) as unknown as { rows: { n: number }[] };
-    if (res.rows[0].n > 0) return;
-    const seed = buildSeed();
-    await tx.insert(schema.customers).values(seed.customers);
-    await tx.insert(schema.products).values(seed.products);
-    for (let i = 0; i < seed.orders.length; i += 500) await tx.insert(schema.orders).values(seed.orders.slice(i, i + 500));
-    for (let i = 0; i < seed.items.length; i += 500) await tx.insert(schema.orderItems).values(seed.items.slice(i, i + 500));
-    for (const t of ["customers", "products", "orders", "order_items"]) await tx.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('${t}','id'), (SELECT max(id) FROM ${t}))`));
+    if (res.rows[0].n === 0) await insertSample(tx);
   });
+  await stampIfMissing(db);
   return db;
 }
 
@@ -42,12 +38,20 @@ async function demoDatabase(): Promise<DB> {
   return prepare(drizzle(new PGlite(), { schema }) as unknown as DB);
 }
 
-const g = globalThis as unknown as { __pulseDb?: Promise<DB> };
+const g = globalThis as unknown as { __pulseDb?: Promise<DB>; __pulseResetCheck?: number };
+const CHECK_EVERY_MS = 5 * 60_000;
+
 /** One connection pool (or demo database) per server instance, shared by every request. */
-export function getDb() {
+export async function getDb() {
   g.__pulseDb ??= (database.url ? connectPostgres(database.url) : demoDatabase()).catch((e) => {
     g.__pulseDb = undefined; // let the next request retry instead of caching the failure
     throw e;
   });
-  return g.__pulseDb;
+  const db = await g.__pulseDb;
+  // At most every 5 minutes per server: replace the sample data if it is older than DEMO_RESET_HOURS.
+  if (demoResetHours && Date.now() - (g.__pulseResetCheck ?? 0) > CHECK_EVERY_MS) {
+    g.__pulseResetCheck = Date.now();
+    await resetSample(db, (seeded) => resetDue(seeded, new Date(), demoResetHours)).catch(() => "busy");
+  }
+  return db;
 }

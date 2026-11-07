@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS orders (id serial PRIMARY KEY, customer_id integer NO
 CREATE INDEX IF NOT EXISTS orders_created_idx ON orders(created_at);
 CREATE INDEX IF NOT EXISTS orders_status_idx ON orders(status);
 CREATE TABLE IF NOT EXISTS order_items (id serial PRIMARY KEY, order_id integer NOT NULL REFERENCES orders(id) ON DELETE CASCADE, product_id integer NOT NULL REFERENCES products(id), quantity integer NOT NULL, unit_cents integer NOT NULL);
+CREATE TABLE IF NOT EXISTS demo_meta (id integer PRIMARY KEY DEFAULT 1 CHECK (id = 1), seeded_at timestamptz NOT NULL);
 `;
 
-export const RESET = `DROP TABLE IF EXISTS order_items, orders, products, customers; DROP TYPE IF EXISTS order_status;`;
+export const RESET = `DROP TABLE IF EXISTS order_items, orders, products, customers, demo_meta; DROP TYPE IF EXISTS order_status;`;
