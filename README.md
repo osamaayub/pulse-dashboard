@@ -45,6 +45,7 @@ KPIs that compare with the last period, revenue charts, orders you can search, f
 | **Customer page** | Totals, full order history and spend by category |
 | **Products** | Units, revenue, change vs the previous period and share of revenue per product, filtered by date range and category |
 | **CSV export** | Downloads the current filtered view, with cells that spreadsheets can't run as formulas |
+| **Self-resetting demo** | Visitors can ship and refund freely: the sample store is replaced with a fresh copy every 24 hours (`DEMO_RESET_HOURS`), or right away with **Reset demo data** in the sidebar. Only sample data is ever reset |
 | **Real PostgreSQL** | `DATABASE_URL` or Netlify Database; creates its own tables and demo data on first start. Falls back to a built-in demo database |
 
 <table>
@@ -196,7 +197,8 @@ src/
 │   ├── env.ts                        # Environment variables, validated with Zod
 │   ├── schema.ts                     # Tables for Drizzle
 │   ├── ddl.ts                        # The same tables as SQL (used by db:setup)
-│   └── seed.ts                       # Deterministic two-year demo store
+│   ├── seed.ts                       # Deterministic two-year demo store
+│   └── demo.ts, demo-rules.ts        # Daily and on-demand reset of the sample store
 ├── components/                       # App shell: sidebar, search box, panels, pills
 └── lib/                              # format.ts, url.ts, search.ts
 scripts/db-setup.mjs                  # npm run db:setup
@@ -234,6 +236,8 @@ npm run build       # production build
 **Any other host.** Add `DATABASE_URL` (Neon, Supabase, Railway, RDS...) to the host's environment variables and deploy. The app creates its tables and demo data on first start, so there's nothing else to run.
 
 Which database runs, in order: `DATABASE_URL`, then `NETLIFY_DB_URL`, then the built-in demo database.
+
+**Demo reset.** The app only replaces data it made itself (every customer has an `@example.com` email), so pointing it at a real store is safe. Set `DEMO_RESET_HOURS=0` to turn the daily reset off.
 
 **Check a deploy:** open `/api/health`. It shows which database is in use, the order count and the PostgreSQL version, or the exact connection error (passwords hidden).
 
