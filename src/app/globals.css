@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  --canvas: #f3f5f9;
+  --panel: #ffffff;
+  --ink: #0d1324;
+  --muted: #5b6478;
+  --line: #e3e7ef;
+  --brand: #4f46e5;
+  --brand-soft: #eef0ff;
+  --teal: #0f9f94;
+  --up: #0a8a5a;
+  --down: #c2410c;
+  --side: #0d1324;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-teal: var(--teal);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-side: var(--side);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+}
+
+.num { font-variant-numeric: tabular-nums; }
+
+@keyframes shimmer { to { background-position: -200% 0; } }
+.skeleton {
+  background: linear-gradient(90deg, #e9edf4 0%, #f5f7fb 50%, #e9edf4 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 12px;
+}
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
