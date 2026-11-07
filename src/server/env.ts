@@ -1,23 +1,20 @@
 import "server-only";
 import { z } from "zod";
 
-/** Every environment variable the app reads, checked once at startup. A typo fails fast with a clear message. */
-const pgUrl = z
-  .string()
-  .regex(/^postgres(ql)?:\/\//, "must start with postgres:// or postgresql://")
-  .optional();
+const pgUrl = z.string().trim().regex(/^postgres(ql)?:\/\//, "must start with postgres:// or postgresql://");
 
-const schema = z.object({
-  /** Any PostgreSQL: local, Neon, Supabase, RDS... */
-  DATABASE_URL: pgUrl,
-  /** Set automatically by Netlify when the project has a Netlify Database. */
-  NETLIFY_DB_URL: pgUrl,
-});
+/** Which database to use: DATABASE_URL first, then Netlify Database, else the built-in demo database.
+ *  A malformed value is reported on /api/health instead of crashing every page. */
+function pick() {
+  const problems: string[] = [];
+  for (const name of ["DATABASE_URL", "NETLIFY_DB_URL"] as const) {
+    const raw = process.env[name];
+    if (!raw) continue;
+    const r = pgUrl.safeParse(raw);
+    if (r.success) return { url: r.data, source: name, problems };
+    problems.push(`${name} ${r.error.issues[0].message}`);
+  }
+  return { url: undefined, source: "demo" as const, problems };
+}
 
-const parsed = schema.safeParse(process.env);
-if (!parsed.success) throw new Error(`Invalid environment: ${parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`);
-
-export const env = parsed.data;
-
-/** The database to use: an explicit DATABASE_URL wins, then Netlify's own database, else none (demo mode). */
-export const databaseUrl = env.DATABASE_URL ?? env.NETLIFY_DB_URL;
+export const database = pick();

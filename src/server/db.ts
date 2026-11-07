@@ -2,7 +2,7 @@ import "server-only";
 import { sql } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import { DDL } from "./ddl";
-import { databaseUrl } from "./env";
+import { database } from "./env";
 import * as schema from "./schema";
 import { buildSeed } from "./seed";
 
@@ -13,7 +13,8 @@ async function prepare(db: DB) {
   await db.transaction(async (tx) => {
     // One server at a time: parallel cold starts wait here instead of seeding twice.
     await tx.execute(sql`SELECT pg_advisory_xact_lock(724001)`);
-    await tx.execute(sql.raw(DDL));
+    // One statement per call: PGlite (and some poolers) reject several statements in one query.
+    for (const stmt of DDL.split("\n").map((l) => l.trim()).filter(Boolean)) await tx.execute(sql.raw(stmt));
     const res = (await tx.execute(sql`SELECT count(*)::int AS n FROM orders`)) as unknown as { rows: { n: number }[] };
     if (res.rows[0].n > 0) return;
     const seed = buildSeed();
@@ -44,7 +45,7 @@ async function demoDatabase(): Promise<DB> {
 const g = globalThis as unknown as { __pulseDb?: Promise<DB> };
 /** One connection pool (or demo database) per server instance, shared by every request. */
 export function getDb() {
-  g.__pulseDb ??= (databaseUrl ? connectPostgres(databaseUrl) : demoDatabase()).catch((e) => {
+  g.__pulseDb ??= (database.url ? connectPostgres(database.url) : demoDatabase()).catch((e) => {
     g.__pulseDb = undefined; // let the next request retry instead of caching the failure
     throw e;
   });
