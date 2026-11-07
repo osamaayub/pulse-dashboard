@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
+import { ResetDemo } from "@/features/demo/components/reset-demo";
 
 const NAV = [
   { href: "/", label: "Overview", icon: "M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z" },
@@ -11,7 +12,7 @@ const NAV = [
   { href: "/products", label: "Products", icon: "M12 3 3 7.5v9L12 21l9-4.5v-9L12 3Zm0 0v18M3 7.5l9 4.5 9-4.5" },
 ];
 
-export function Sidebar() {
+export function Sidebar({ resetHours }: { resetHours: number }) {
   return (
     <aside className="bg-side text-white lg:sticky lg:top-0 lg:h-dvh">
       <div className="flex items-center gap-3 px-5 py-4 lg:py-6">
@@ -25,7 +26,9 @@ export function Sidebar() {
       <Suspense fallback={<NavLinks path={null} />}>
         <CurrentNav />
       </Suspense>
-      <p className="hidden px-6 pt-8 text-xs leading-relaxed text-white/45 lg:block">Demo store with sample data.</p>
+      <div className="hidden px-6 pt-8 lg:block">
+        <ResetDemo hours={resetHours} />
+      </div>
     </aside>
   );
 }
