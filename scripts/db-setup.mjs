@@ -40,6 +40,7 @@ try {
     await insert("orders", ["id", "customerId", "status", "totalCents", "createdAt"], s.orders);
     await insert("order_items", ["orderId", "productId", "quantity", "unitCents"], s.items);
     for (const t of ["customers", "products", "orders", "order_items"]) await client.query(`SELECT setval(pg_get_serial_sequence('${t}','id'), (SELECT max(id) FROM ${t}))`);
+    await client.query("INSERT INTO demo_meta (id, seeded_at) VALUES (1, now()) ON CONFLICT (id) DO UPDATE SET seeded_at = excluded.seeded_at");
     say(`Created tables and added ${s.customers.length} customers, ${s.products.length} products, ${s.orders.length} orders and ${s.items.length} order items.`);
   }
   await client.query("COMMIT");
