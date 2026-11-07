@@ -24,6 +24,7 @@ KPIs that compare with the last period, revenue charts, and an orders table you 
 - [Quick start](#quick-start)
 - [Use your own PostgreSQL](#use-your-own-postgresql)
 - [How it works](#how-it-works)
+- [Architecture](#architecture)
 - [Project structure](#project-structure)
 - [Security and quality](#security-and-quality)
 - [Deploy](#deploy)
@@ -120,33 +121,70 @@ Design rules:
 
 1. **The URL is the state.** Range, search, filter, sort and page live in the query string. Refresh, the back button and shared links all show the same view.
 2. **Only charts run in the browser.** Everything else renders on the server, so the page ships little JavaScript.
-3. **User input is parsed, never trusted.** Search params go through Zod with fallbacks, and search text is escaped for `ILIKE`.
+3. **User input is parsed, never trusted.** Search params and environment variables go through Zod, and search text is escaped for `ILIKE`.
 4. **Money is stored in cents** as integers, so totals never pick up decimal rounding errors.
+
+## Architecture
+
+The code is split by **feature**, not by file type. Everything about orders (its queries, Server Action, URL schema, CSV logic and components) lives in one folder, so a change to orders touches one place.
+
+```mermaid
+flowchart TB
+    subgraph app["app/  (routes: thin, no logic)"]
+      R1["page.tsx"]; R2["orders/page.tsx"]; R3["api/orders/export"]
+    end
+    subgraph features["features/  (business logic + UI per feature)"]
+      A["analytics<br/>range · queries · overview · charts"]
+      O["orders<br/>params · queries · actions · csv · table"]
+    end
+    subgraph server["server/  (infrastructure)"]
+      DB["db.ts: Postgres pool or demo DB"]; ENV["env.ts: validated config"]; SC["schema.ts · ddl.ts · seed.ts"]
+    end
+    LIB["lib/  (pure helpers: format, url)"]
+    R1 --> A; R2 --> O; R3 --> O; A --> O
+    A --> DB; O --> DB; DB --> ENV; DB --> SC
+    A --> LIB; O --> LIB
+```
+
+Rules the code follows:
+
+| Layer | Can import | Never |
+| --- | --- | --- |
+| `app/` routes | features, components | SQL or business rules |
+| `features/*/queries.ts`, `actions.ts` | `server/`, `lib/` | React components |
+| `features/*/components` | its feature, `components/`, `lib/` | the database directly |
+| `server/` | nothing above it | UI code (`server-only` makes the build fail if a client file imports it) |
+| `lib/` | nothing | side effects (pure functions, unit tested) |
 
 ## Project structure
 
 ```text
 src/
-├── app/
-│   ├── page.tsx                    # Overview: KPIs, charts, top products, latest orders
-│   ├── orders/page.tsx             # Orders table: search, filters, sorting, pages
-│   └── api/orders/export/route.ts  # CSV export of the current view
-├── components/
-│   ├── charts.tsx                  # Recharts (the only chart code in the browser)
-│   ├── search-box.tsx              # Debounced search that writes to the URL
-│   ├── ship-button.tsx             # useActionState + pending state
-│   └── sidebar.tsx, ui.tsx
-├── lib/
-│   ├── params.ts                   # Zod schemas for URL params, date windows, deltas
-│   └── format.ts                   # Money, numbers, dates
-└── server/
-    ├── db.ts                       # Real Postgres (DATABASE_URL) or the demo database
-    ├── ddl.ts                      # Table definitions as SQL
-    ├── schema.ts                   # The same tables for Drizzle
-    ├── seed.ts                     # Deterministic two-year demo store
-    ├── queries.ts                  # Every SQL query the pages use
-    └── actions.ts                  # "Mark shipped" Server Action
-scripts/db-setup.mjs                # npm run db:setup
+├── app/                              # Routes only: parse the URL, render a feature
+│   ├── page.tsx
+│   ├── orders/page.tsx
+│   └── api/orders/export/route.ts    # CSV download
+├── features/
+│   ├── analytics/
+│   │   ├── range.ts                  # ?range= schema, date windows, % change
+│   │   ├── queries.ts                # KPIs, revenue series, categories, top products
+│   │   └── components/               # overview.tsx, charts.tsx (Recharts, client)
+│   └── orders/
+│       ├── params.ts                 # ?q=&status=&sort=&page= schema
+│       ├── queries.ts                # search, filter, sort, paginate in SQL
+│       ├── actions.ts                # "Mark shipped" Server Action
+│       ├── csv.ts                    # formula-safe CSV cells
+│       └── components/               # orders-table, search-box, ship-button, status-badge
+├── server/
+│   ├── db.ts                         # Real Postgres (DATABASE_URL) or the demo database
+│   ├── env.ts                        # Environment variables, validated with Zod
+│   ├── schema.ts                     # Tables for Drizzle
+│   ├── ddl.ts                        # The same tables as SQL (used by db:setup)
+│   └── seed.ts                       # Deterministic two-year demo store
+├── components/                       # App shell: sidebar, panels, pills
+└── lib/                              # format.ts, url.ts
+scripts/db-setup.mjs                  # npm run db:setup
+test/                                 # params, dates, deltas, seed, CSV
 ```
 
 ## Security and quality
@@ -156,7 +194,8 @@ scripts/db-setup.mjs                # npm run db:setup
 - The ship action can only move `paid` orders to `shipped`, checked inside the SQL `UPDATE`
 - CSV cells starting with `=`, `+`, `-` or `@` are escaped, so a customer name can't run a spreadsheet formula
 - TLS is required for remote databases
-- Tests (Vitest) for param parsing, date windows, deltas and seed consistency
+- Environment variables validated at startup (`src/server/env.ts`)
+- Tests (Vitest) for param parsing, date windows, deltas, seed consistency and CSV safety
 - Keyboard focus styles, labelled controls, reduced-motion support
 
 ```bash
