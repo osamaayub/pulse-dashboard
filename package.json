@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.15",
+    "@netlify/database": "^2.0.3",
     "drizzle-orm": "^0.45.4",
     "geist": "^1.9.2",
     "next": "16.4.5",

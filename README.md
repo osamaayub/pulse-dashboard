@@ -41,7 +41,7 @@ KPIs that compare with the last period, revenue charts, and an orders table you 
 | **All in SQL** | Filtering, sorting, counting and paging run in PostgreSQL; the browser gets one page of rows |
 | **Mark shipped** | A Server Action with `useActionState`. The status check is inside the `UPDATE`, so double clicks are safe |
 | **CSV export** | Downloads the current filtered view, with cells that spreadsheets can't run as formulas |
-| **Two databases** | Real PostgreSQL through `DATABASE_URL`, or a built-in demo database when no URL is set |
+| **Real PostgreSQL** | `DATABASE_URL` or Netlify Database; creates its own tables and demo data on first start. Falls back to a built-in demo database |
 
 <table>
   <tr>
@@ -95,7 +95,7 @@ Created tables and added 420 customers, 15 products, 3911 orders and 7824 order 
 Done in 0.6s.
 ```
 
-Run it again any time: it never duplicates data. Use `npm run db:setup -- --reset` to start over.
+Run it again any time: it never duplicates data. Use `npm run db:setup -- --reset` to start over. (The app also creates the tables and demo data by itself on first start, so this step is optional.)
 
 **4. Run the app** with `npm run dev`. Click **Mark shipped** on an order, then check the database:
 
@@ -176,7 +176,7 @@ src/
 │       ├── csv.ts                    # formula-safe CSV cells
 │       └── components/               # orders-table, search-box, ship-button, status-badge
 ├── server/
-│   ├── db.ts                         # Real Postgres (DATABASE_URL) or the demo database
+│   ├── db.ts                         # Postgres pool + first-start setup, or the demo database
 │   ├── env.ts                        # Environment variables, validated with Zod
 │   ├── schema.ts                     # Tables for Drizzle
 │   ├── ddl.ts                        # The same tables as SQL (used by db:setup)
@@ -184,6 +184,7 @@ src/
 ├── components/                       # App shell: sidebar, panels, pills
 └── lib/                              # format.ts, url.ts
 scripts/db-setup.mjs                  # npm run db:setup
+netlify/database/migrations/          # tables for Netlify Database
 test/                                 # params, dates, deltas, seed, CSV
 ```
 
@@ -207,12 +208,16 @@ npm run build       # production build
 
 ## Deploy
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fosamaayub%2Fpulse-dashboard)
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/osamaayub/pulse-dashboard)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fosamaayub%2Fpulse-dashboard)
 
-Both work with no settings: without `DATABASE_URL` the live site uses the demo database. For real data, add `DATABASE_URL` (for example from Neon) in the host's environment variables, run `npm run db:setup` once from your machine with the same URL, and redeploy.
+**Netlify (real PostgreSQL included).** The repo has a migration in `netlify/database/migrations/` and depends on `@netlify/database`, so Netlify creates a PostgreSQL database for the project on the first deploy and sets `NETLIFY_DB_URL` for you. On its first request the app adds two years of demo orders. No keys to copy.
 
-GitHub Pages can't host this app, because it runs server code and a database. The code lives on GitHub; the app runs on Vercel or Netlify.
+**Any other host.** Add `DATABASE_URL` (Neon, Supabase, Railway, RDS...) to the host's environment variables and deploy. The app creates its tables and demo data on first start, so there's nothing else to run.
+
+Which database runs, in order: `DATABASE_URL`, then `NETLIFY_DB_URL`, then the built-in demo database.
+
+GitHub Pages can't host this app, because it runs server code and a database. The code lives on GitHub; the app runs on Netlify or Vercel.
 
 ## Practise
 
