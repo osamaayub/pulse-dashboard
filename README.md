@@ -217,6 +217,8 @@ npm run build       # production build
 
 Which database runs, in order: `DATABASE_URL`, then `NETLIFY_DB_URL`, then the built-in demo database.
 
+**Check a deploy:** open `/api/health`. It shows which database is in use, the order count and the PostgreSQL version, or the exact connection error (passwords hidden).
+
 GitHub Pages can't host this app, because it runs server code and a database. The code lives on GitHub; the app runs on Netlify or Vercel.
 
 ## Practise
