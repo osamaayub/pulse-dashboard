@@ -27,18 +27,19 @@ export function buildSeed(now = Date.now(), seed = 42) {
   const r = rng(seed);
   const pick = <T,>(a: T[]) => a[Math.floor(r() * a.length)];
   const DAY = 86_400_000;
-  const customers = Array.from({ length: 260 }, (_, i) => {
+  const customers = Array.from({ length: 420 }, (_, i) => {
     const first = pick(FIRST), last = pick(LAST);
-    return { id: i + 1, name: `${first} ${last}`, email: `${first}.${last}${i}@example.com`.toLowerCase(), country: pick(COUNTRIES), createdAt: new Date(now - Math.floor(r() * 400) * DAY) };
+    return { id: i + 1, name: `${first} ${last}`, email: `${first}.${last}${i}@example.com`.toLowerCase(), country: pick(COUNTRIES), createdAt: new Date(now - Math.floor(r() * 790) * DAY) };
   });
   const products = CATALOG.map(([name, category, priceCents], i) => ({ id: i + 1, name, category, priceCents }));
   const orders: { id: number; customerId: number; status: "pending" | "paid" | "shipped" | "refunded"; totalCents: number; createdAt: Date }[] = [];
   const items: { orderId: number; productId: number; quantity: number; unitCents: number }[] = [];
   let id = 0;
-  for (let d = 395; d >= 0; d--) {
+  const DAYS = 760; // two years, so every range has a full previous period to compare with
+  for (let d = DAYS; d >= 0; d--) {
     // Gentle growth over the year, busier weekends, a November peak.
     const date = new Date(now - d * DAY);
-    const growth = 1 + (395 - d) / 395;
+    const growth = 1 + (0.6 * (DAYS - d)) / DAYS;
     const weekend = [0, 6].includes(date.getDay()) ? 1.35 : 1;
     const peak = date.getMonth() === 10 ? 1.4 : 1;
     const n = Math.round((2 + r() * 3) * growth * weekend * peak);
