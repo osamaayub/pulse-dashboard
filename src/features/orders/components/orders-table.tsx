@@ -1,10 +1,10 @@
 import Link from "next/link";
+import { SearchBox } from "@/components/search-box";
 import { Panel, PillLink } from "@/components/ui";
 import { money, num, shortDate } from "@/lib/format";
 import { withParams } from "@/lib/url";
 import { STATUSES, type OrdersQuery } from "../params";
 import { listOrders, statusCounts } from "../queries";
-import { SearchBox } from "./search-box";
 import { ShipButton } from "./ship-button";
 import { StatusBadge } from "./status-badge";
 
@@ -17,7 +17,7 @@ export async function OrdersTable({ q }: { q: OrdersQuery }) {
   return (
     <Panel>
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <SearchBox defaultValue={q.q} />
+        <SearchBox defaultValue={q.q} label="Search orders" placeholder="Search name, email or #order" />
         <nav className="flex flex-wrap gap-1" aria-label="Filter by status">
           <PillLink href={`/orders${withParams(base, { status: undefined, page: undefined })}`} active={!q.status}>All <span className="num opacity-60">{num(all)}</span></PillLink>
           {STATUSES.map((s) => (
@@ -44,8 +44,8 @@ export async function OrdersTable({ q }: { q: OrdersQuery }) {
           <tbody className="divide-y divide-line">
             {rows.map((o) => (
               <tr key={o.id} className="hover:bg-canvas/70">
-                <td className="num py-3 pr-3 text-muted">#{o.id}</td>
-                <td className="py-3 pr-3"><p className="font-medium">{o.customer}</p><p className="text-xs text-muted">{o.email} · {o.country}</p></td>
+                <td className="num py-3 pr-3"><Link href={`/orders/${o.id}`} className="font-medium text-brand hover:underline">#{o.id}</Link></td>
+                <td className="py-3 pr-3"><Link href={`/customers/${o.customerId}`} className="font-medium hover:text-brand hover:underline">{o.customer}</Link><p className="text-xs text-muted">{o.email} · {o.country}</p></td>
                 <td className="num py-3 pr-3 text-muted">{shortDate(o.createdAt)}</td>
                 <td className="py-3 pr-3"><StatusBadge status={o.status} /></td>
                 <td className="num py-3 pr-3 text-right font-semibold">{money(o.totalCents)}</td>
