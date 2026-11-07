@@ -1,5 +1,6 @@
 import "server-only";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
+import { env } from "./env";
 import * as schema from "./schema";
 
 export type DB = PgDatabase<PgQueryResultHKT, typeof schema>;
@@ -33,9 +34,7 @@ async function demoDatabase(): Promise<DB> {
 const g = globalThis as unknown as { __pulseDb?: Promise<DB> };
 /** One connection pool (or demo database) per server instance, shared by every request. */
 export function getDb() {
-  const url = process.env.DATABASE_URL;
+  const url = env.DATABASE_URL;
   g.__pulseDb ??= url ? connectPostgres(url) : demoDatabase();
   return g.__pulseDb;
 }
-
-export const usingRealPostgres = () => Boolean(process.env.DATABASE_URL);
