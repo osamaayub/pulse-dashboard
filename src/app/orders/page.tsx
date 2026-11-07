@@ -44,7 +44,7 @@ async function Orders({ q }: { q: OrdersQuery }) {
             </PillLink>
           ))}
         </nav>
-        <a href={`/api/orders.csv${withParams(base, {})}`} className="ml-auto rounded-lg border border-line px-3 py-1.5 text-sm font-medium hover:bg-canvas focus-visible:ring-2 focus-visible:ring-brand outline-none">Export CSV</a>
+        <a href={`/api/orders/export${withParams(base, {})}`} className="ml-auto rounded-lg border border-line px-3 py-1.5 text-sm font-medium hover:bg-canvas focus-visible:ring-2 focus-visible:ring-brand outline-none">Export CSV</a>
       </div>
 
       <div className="overflow-x-auto">
