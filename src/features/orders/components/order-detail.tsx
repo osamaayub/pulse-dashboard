@@ -30,31 +30,32 @@ export async function OrderDetail({ id }: { id: number }) {
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Panel title={`Items · ${num(units)} ${units === 1 ? "unit" : "units"}`}>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[480px] text-left text-sm">
+          <div className="relative overflow-x-auto">
+            <table className="w-full text-left text-sm">
               <thead className="border-b border-line text-xs text-muted">
                 <tr>
                   <th className="py-2.5 pr-3 font-medium">Product</th>
-                  <th className="py-2.5 pr-3 text-right font-medium">Price</th>
-                  <th className="py-2.5 pr-3 text-right font-medium">Qty</th>
+                  <th className="hidden py-2.5 pr-3 text-right font-medium sm:table-cell">Price</th>
+                  <th className="hidden py-2.5 pr-3 text-right font-medium sm:table-cell">Qty</th>
                   <th className="py-2.5 text-right font-medium">Subtotal</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {order.items.map((i) => (
                   <tr key={i.id}>
-                    <td className="py-3 pr-3"><p className="font-medium">{i.product}</p><p className="text-xs text-muted">{i.category}</p></td>
-                    <td className="num py-3 pr-3 text-right">{money(i.unitCents)}</td>
-                    <td className="num py-3 pr-3 text-right">{i.quantity}</td>
+                    <td className="py-3 pr-3"><p className="font-medium">{i.product}</p><p className="text-xs text-muted">{i.category}<span className="num sm:hidden"> · {i.quantity} × {money(i.unitCents)}</span></p></td>
+                    <td className="num hidden py-3 pr-3 text-right sm:table-cell">{money(i.unitCents)}</td>
+                    <td className="num hidden py-3 pr-3 text-right sm:table-cell">{i.quantity}</td>
                     <td className="num py-3 text-right font-medium">{money(i.unitCents * i.quantity)}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr className="border-t border-line">
-                  <td colSpan={3} className="pt-3 text-right font-medium">Total</td>
+                  <td colSpan={3} className="hidden pt-3 text-right font-medium sm:table-cell">Total</td>
+                  <td className="pt-3 font-medium sm:hidden">Total</td>
                   <td className="num pt-3 text-right text-base font-semibold">{money(order.totalCents)}</td>
                 </tr>
               </tfoot>

@@ -26,10 +26,28 @@ export async function OrdersTable({ q }: { q: OrdersQuery }) {
             </PillLink>
           ))}
         </nav>
-        <a href={`/api/orders/export${withParams(base, {})}`} className="ml-auto rounded-lg border border-line px-3 py-1.5 text-sm font-medium hover:bg-canvas focus-visible:ring-2 focus-visible:ring-brand outline-none">Export CSV</a>
+        <a href={`/api/orders/export${withParams(base, {})}`} className="ml-auto inline-flex min-h-10 items-center rounded-lg border border-line px-3 text-sm font-medium sm:min-h-0 sm:py-1.5 hover:bg-canvas focus-visible:ring-2 focus-visible:ring-brand outline-none">Export CSV</a>
       </div>
 
-      <div className="overflow-x-auto">
+      <ul className="divide-y divide-line sm:hidden">
+        {rows.map((o) => (
+          <li key={o.id} className="py-3">
+            <div className="flex items-baseline justify-between gap-3">
+              <Link href={`/orders/${o.id}`} className="num font-medium text-brand hover:underline">#{o.id}</Link>
+              <span className="num font-semibold">{money(o.totalCents)}</span>
+            </div>
+            <Link href={`/customers/${o.customerId}`} className="mt-0.5 block truncate text-sm font-medium hover:text-brand">{o.customer}</Link>
+            <div className="mt-2 flex items-center gap-2 text-xs text-muted">
+              <StatusBadge status={o.status} />
+              <span className="num">{shortDate(o.createdAt)}</span>
+              <span className="truncate">· {o.country}</span>
+              {o.status === "paid" && <span className="ml-auto"><ShipButton id={o.id} /></span>}
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div className="relative hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="border-b border-line text-xs text-muted">
             <tr>
@@ -54,10 +72,10 @@ export async function OrdersTable({ q }: { q: OrdersQuery }) {
             ))}
           </tbody>
         </table>
-        {!rows.length && <p className="py-16 text-center text-sm text-muted">No orders match. Try another name, email or order number.</p>}
       </div>
+      {!rows.length && <p className="py-16 text-center text-sm text-muted">No orders match. Try another name, email or order number.</p>}
 
-      <div className="mt-4 flex items-center justify-between text-sm">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
         <p className="num text-muted">{num(total)} orders · page {q.page} of {pages}</p>
         <div className="flex gap-2">
           <PageLink href={q.page > 1 ? `/orders${withParams(base, { page: q.page - 1 === 1 ? undefined : q.page - 1 })}` : null}>Previous</PageLink>
@@ -69,6 +87,6 @@ export async function OrdersTable({ q }: { q: OrdersQuery }) {
 }
 
 function PageLink({ href, children }: { href: string | null; children: React.ReactNode }) {
-  if (!href) return <span className="rounded-lg border border-line px-3 py-1.5 text-muted/60" aria-disabled="true">{children}</span>;
-  return <Link href={href} scroll={false} className="rounded-lg border border-line px-3 py-1.5 font-medium outline-none hover:bg-canvas focus-visible:ring-2 focus-visible:ring-brand">{children}</Link>;
+  if (!href) return <span className="inline-flex min-h-10 items-center rounded-lg border border-line px-3 text-muted/60 sm:min-h-0 sm:py-1.5" aria-disabled="true">{children}</span>;
+  return <Link href={href} scroll={false} className="inline-flex min-h-10 items-center rounded-lg border border-line px-3 font-medium outline-none sm:min-h-0 sm:py-1.5 hover:bg-canvas focus-visible:ring-2 focus-visible:ring-brand">{children}</Link>;
 }
