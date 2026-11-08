@@ -25,7 +25,7 @@ export async function CustomerDetail({ id }: { id: number }) {
         </p>
       </header>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label} className="rounded-2xl border border-line bg-panel p-5">
             <p className="text-sm text-muted">{s.label}</p>
@@ -34,17 +34,17 @@ export async function CustomerDetail({ id }: { id: number }) {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Panel title="Order history">
           {c.history.length ? (
             <ul className="divide-y divide-line">
               {c.history.map((o) => (
                 <li key={o.id}>
                   <Link href={`/orders/${o.id}`} className="flex items-center gap-3 py-3 text-sm hover:bg-canvas/70">
-                    <span className="num w-16 text-muted">#{o.id}</span>
-                    <span className="num flex-1 text-muted">{longDate(o.createdAt)}</span>
+                    <span className="num w-12 shrink-0 text-muted sm:w-16">#{o.id}</span>
+                    <span className="num min-w-0 flex-1 truncate whitespace-nowrap text-muted">{longDate(o.createdAt)}</span>
                     <StatusBadge status={o.status} />
-                    <span className="num w-24 text-right font-semibold">{money(o.totalCents)}</span>
+                    <span className="num w-16 shrink-0 text-right font-semibold sm:w-24">{money(o.totalCents)}</span>
                   </Link>
                 </li>
               ))}

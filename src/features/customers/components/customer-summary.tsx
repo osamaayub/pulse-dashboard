@@ -10,7 +10,7 @@ export async function CustomerSummary() {
     { label: "Average lifetime value", value: money(s.avgLtv) },
   ];
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       {cards.map((c) => (
         <div key={c.label} className="rounded-2xl border border-line bg-panel p-5">
           <p className="text-sm text-muted">{c.label}</p>

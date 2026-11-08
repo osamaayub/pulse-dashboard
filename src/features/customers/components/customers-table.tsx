@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Panel } from "@/components/ui";
+import { Panel, PillLink } from "@/components/ui";
 import { SearchBox } from "@/components/search-box";
 import { longDate, money, num } from "@/lib/format";
 import { withParams } from "@/lib/url";
@@ -23,8 +23,26 @@ export async function CustomersTable({ q }: { q: CustomersQuery }) {
     <Panel>
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <SearchBox defaultValue={q.q} label="Search customers" placeholder="Search name, email or country" />
+        <nav className="flex flex-wrap gap-1 sm:hidden" aria-label="Sort customers">
+          {COLS.map((c) => (
+            <PillLink key={c.key} href={sortHref(c.key)} active={q.sort === c.key}>{c.label}{arrow(c.key)}</PillLink>
+          ))}
+        </nav>
       </div>
-      <div className="overflow-x-auto">
+      <ul className="divide-y divide-line sm:hidden">
+        {rows.map((c) => (
+          <li key={c.id}>
+            <Link href={`/customers/${c.id}`} className="flex items-center gap-3 py-3">
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{c.name}</span>
+                <span className="block truncate text-xs text-muted">{c.country} · {num(c.orders)} orders · {c.lastOrder ? `last ${longDate(c.lastOrder)}` : "no orders yet"}</span>
+              </span>
+              <span className="num font-semibold">{money(c.ltv)}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <div className="relative hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="border-b border-line text-xs text-muted">
             <tr>
@@ -49,9 +67,9 @@ export async function CustomersTable({ q }: { q: CustomersQuery }) {
             ))}
           </tbody>
         </table>
-        {!rows.length && <p className="py-16 text-center text-sm text-muted">No customers match. Try another name, email or country.</p>}
       </div>
-      <div className="mt-4 flex items-center justify-between text-sm">
+      {!rows.length && <p className="py-16 text-center text-sm text-muted">No customers match. Try another name, email or country.</p>}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
         <p className="num text-muted">{num(total)} customers · page {q.page} of {pages}</p>
         <div className="flex gap-2">
           <PageLink href={q.page > 1 ? `/customers${withParams(base, { page: q.page - 1 === 1 ? undefined : q.page - 1 })}` : null}>Previous</PageLink>
@@ -63,6 +81,6 @@ export async function CustomersTable({ q }: { q: CustomersQuery }) {
 }
 
 function PageLink({ href, children }: { href: string | null; children: React.ReactNode }) {
-  if (!href) return <span className="rounded-lg border border-line px-3 py-1.5 text-muted/60" aria-disabled="true">{children}</span>;
-  return <Link href={href} scroll={false} className="rounded-lg border border-line px-3 py-1.5 font-medium outline-none hover:bg-canvas focus-visible:ring-2 focus-visible:ring-brand">{children}</Link>;
+  if (!href) return <span className="inline-flex min-h-10 items-center rounded-lg border border-line px-3 text-muted/60 sm:min-h-0 sm:py-1.5" aria-disabled="true">{children}</span>;
+  return <Link href={href} scroll={false} className="inline-flex min-h-10 items-center rounded-lg border border-line px-3 font-medium outline-none sm:min-h-0 sm:py-1.5 hover:bg-canvas focus-visible:ring-2 focus-visible:ring-brand">{children}</Link>;
 }
