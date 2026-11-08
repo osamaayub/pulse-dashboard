@@ -37,7 +37,30 @@ export async function ProductsTable({ q }: { q: ProductsQuery }) {
           <PillLink href={href({ category: undefined })} active={!q.category}>All</PillLink>
           {categories.map((c) => <PillLink key={c} href={href({ category: c })} active={q.category === c}>{c}</PillLink>)}
         </nav>
-        <div className="overflow-x-auto">
+        <nav className="mb-3 flex flex-wrap gap-1 sm:hidden" aria-label="Sort products">
+          {COLS.map((c) => (
+            <PillLink key={c.key} href={href({ sort: c.key === "revenue" ? undefined : c.key })} active={q.sort === c.key}>{c.key === "growth" ? "Growth" : c.key === "name" ? "Name" : c.label}</PillLink>
+          ))}
+        </nav>
+        <ul className="divide-y divide-line sm:hidden">
+          {rows.map((p) => (
+            <li key={p.id} className="py-3">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="min-w-0 truncate font-medium">{p.name}</p>
+                <span className="num font-semibold">{money(p.revenue)}</span>
+              </div>
+              <div className="mt-0.5 flex items-center justify-between gap-3 text-xs text-muted">
+                <span className="num">{p.category} · {num(p.units)} sold</span>
+                {p.revenue || p.growth ? <Delta value={p.growth} /> : <span>No sales</span>}
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <div className="h-1.5 flex-1 rounded-full bg-canvas"><div className="h-full rounded-full bg-brand" style={{ width: `${(p.revenue / top) * 100}%` }} /></div>
+                <span className="num w-12 text-right text-xs text-muted">{(p.share * 100).toFixed(1)}%</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="relative hidden overflow-x-auto sm:block">
           <table className="w-full min-w-[680px] text-left text-sm">
             <thead className="border-b border-line text-xs text-muted">
               <tr>
@@ -66,8 +89,8 @@ export async function ProductsTable({ q }: { q: ProductsQuery }) {
               ))}
             </tbody>
           </table>
-          {!rows.length && <p className="py-16 text-center text-sm text-muted">No products in this category.</p>}
         </div>
+        {!rows.length && <p className="py-16 text-center text-sm text-muted">No products in this category.</p>}
       </Panel>
     </>
   );
