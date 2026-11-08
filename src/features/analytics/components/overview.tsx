@@ -32,22 +32,22 @@ export async function Overview({ range }: { range: Range }) {
         </nav>
       </header>
 
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {kpis.map((k) => (
-          <div key={k.label} className="rounded-2xl border border-line bg-panel p-5">
+          <div key={k.label} className="min-w-0 rounded-2xl border border-line bg-panel p-4 sm:p-5">
             <p className="text-sm text-muted">{k.label}</p>
-            <p className="num mt-2 text-[28px] font-semibold tracking-tight">{k.value}</p>
-            <div className="mt-1 flex items-center gap-2"><Delta value={k.d} /><span className="text-xs text-muted">vs previous</span></div>
+            <p className="num mt-2 text-2xl font-semibold tracking-tight sm:text-[28px]">{k.value}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2"><Delta value={k.d} /><span className="text-xs text-muted">vs previous</span></div>
           </div>
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
         <Panel title="Revenue"><RevenueChart data={series} /></Panel>
         <Panel title="Revenue by category"><CategoryChart data={cats} /></Panel>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Panel title="Top products" action={<Link href={`/products${range === "30d" ? "" : `?range=${range}`}`} className="text-sm font-medium text-brand hover:underline">View all</Link>}>
           <ol className="divide-y divide-line">
             {top.map((p, i) => (
@@ -63,10 +63,10 @@ export async function Overview({ range }: { range: Range }) {
           <ul className="divide-y divide-line">
             {recent.map((o) => (
               <li key={o.id} className="flex items-center gap-3 py-2.5 text-sm">
-                <Link href={`/orders/${o.id}`} className="num w-16 font-medium text-brand hover:underline">#{o.id}</Link>
+                <Link href={`/orders/${o.id}`} className="num w-12 shrink-0 font-medium text-brand hover:underline sm:w-16">#{o.id}</Link>
                 <span className="min-w-0 flex-1 truncate font-medium">{o.customer}</span>
                 <StatusBadge status={o.status} />
-                <span className="num w-20 text-right font-semibold">{money(o.totalCents)}</span>
+                <span className="num w-16 shrink-0 text-right font-semibold sm:w-20">{money(o.totalCents)}</span>
                 <span className="hidden w-14 text-right text-muted sm:block">{shortDate(o.createdAt)}</span>
               </li>
             ))}
