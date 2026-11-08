@@ -3,7 +3,7 @@ import { pct } from "@/lib/format";
 
 export function Panel({ title, action, children, className = "" }: { title?: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <section className={`rounded-2xl border border-line bg-panel p-5 ${className}`}>
+    <section className={`min-w-0 rounded-2xl border border-line bg-panel p-4 sm:p-5 ${className}`}>
       {title && (
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-[15px] font-semibold">{title}</h2>
@@ -31,7 +31,7 @@ export function PillLink({ href, active, children }: { href: string; active: boo
       href={href}
       scroll={false}
       aria-current={active ? "true" : undefined}
-      className={`rounded-lg px-3 py-1.5 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand ${active ? "bg-ink text-white" : "text-muted hover:bg-white hover:text-ink"}`}
+      className={`inline-flex min-h-10 items-center gap-1 rounded-lg px-3 text-sm font-medium outline-none sm:min-h-0 sm:py-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-brand ${active ? "bg-ink text-white" : "text-muted hover:bg-white hover:text-ink"}`}
     >
       {children}
     </Link>

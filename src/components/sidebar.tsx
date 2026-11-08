@@ -14,12 +14,15 @@ const NAV = [
 
 export function Sidebar({ resetHours }: { resetHours: number }) {
   return (
-    <aside className="bg-side text-white lg:sticky lg:top-0 lg:h-dvh">
-      <div className="flex items-center gap-3 px-5 py-4 lg:py-6">
+    <aside className="sticky top-0 z-20 bg-side text-white lg:h-dvh">
+      <div className="flex items-center gap-3 px-4 py-3 sm:px-5 lg:py-6">
         <span className="grid size-9 place-items-center rounded-xl bg-brand font-bold">P</span>
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="font-semibold leading-tight">Pulse</p>
-          <p className="text-xs text-white/55">Northwind Outfitters</p>
+          <p className="truncate text-xs text-white/55">Northwind Outfitters</p>
+        </div>
+        <div className="lg:hidden">
+          <ResetDemo hours={resetHours} compact />
         </div>
       </div>
       {/* The highlighted link depends on the URL, so it streams in; until then the same links show without a highlight. */}
@@ -39,7 +42,7 @@ function CurrentNav() {
 
 function NavLinks({ path }: { path: string | null }) {
   return (
-    <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:overflow-visible lg:pb-0" aria-label="Main">
+    <nav className="grid grid-cols-4 gap-1 px-2 pb-2 sm:px-3 lg:flex lg:flex-col lg:pb-0" aria-label="Main">
       {NAV.map((n) => {
         const active = path !== null && (n.href === "/" ? path === "/" : path.startsWith(n.href));
         return (
@@ -47,7 +50,7 @@ function NavLinks({ path }: { path: string | null }) {
             key={n.href}
             href={n.href}
             aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white/70 ${active ? "bg-white/12 text-white" : "text-white/65 hover:bg-white/6 hover:text-white"}`}
+            className={`flex flex-col items-center gap-1 rounded-lg px-1 py-1.5 text-[11px] font-medium outline-none transition-colors sm:flex-row sm:justify-center sm:gap-2 sm:px-3 sm:py-2 sm:text-sm lg:justify-start lg:gap-3 focus-visible:ring-2 focus-visible:ring-white/70 ${active ? "bg-white/12 text-white" : "text-white/65 hover:bg-white/6 hover:text-white"}`}
           >
             <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden><path d={n.icon} /></svg>
             {n.label}
