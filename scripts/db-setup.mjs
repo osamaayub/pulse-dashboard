@@ -35,8 +35,8 @@ try {
     say(`Tables are ready. ${n} orders already exist, so no demo data was added (use --reset to start over).`);
   } else {
     const s = buildSeed();
-    await insert("customers", ["id", "name", "email", "country", "createdAt"], s.customers);
-    await insert("products", ["id", "name", "category", "priceCents"], s.products);
+    await insert("customers", ["id", "name", "email", "country", "createdAt", "isActive"], s.customers);
+    await insert("products", ["id", "name", "category", "priceCents", "stockQuantity", "isActive"], s.products);
     await insert("orders", ["id", "customerId", "status", "totalCents", "createdAt"], s.orders);
     await insert("order_items", ["orderId", "productId", "quantity", "unitCents"], s.items);
     for (const t of ["customers", "products", "orders", "order_items"]) await client.query(`SELECT setval(pg_get_serial_sequence('${t}','id'), (SELECT max(id) FROM ${t}))`);

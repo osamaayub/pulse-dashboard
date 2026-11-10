@@ -45,7 +45,7 @@ export async function resetSample(db: DB, shouldReset: (seeded: Date | null) => 
     const seeded = await seededAt(tx);
     if (!shouldReset(seeded)) return "not-due";
     if (!(await isSampleData(tx))) return "not-sample";
-    await tx.execute(sql`TRUNCATE order_items, orders, customers, products RESTART IDENTITY`);
+    await tx.execute(sql`TRUNCATE audit_log, order_items, orders, customers, products RESTART IDENTITY`);
     await insertSample(tx);
     return "reset";
   });

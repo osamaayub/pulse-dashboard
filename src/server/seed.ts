@@ -29,9 +29,9 @@ export function buildSeed(now = Date.now(), seed = 42) {
   const DAY = 86_400_000;
   const customers = Array.from({ length: 420 }, (_, i) => {
     const first = pick(FIRST), last = pick(LAST);
-    return { id: i + 1, name: `${first} ${last}`, email: `${first}.${last}${i}@example.com`.toLowerCase(), country: pick(COUNTRIES), createdAt: new Date(now - Math.floor(r() * 790) * DAY) };
+    return { id: i + 1, name: `${first} ${last}`, email: `${first}.${last}${i}@example.com`.toLowerCase(), country: pick(COUNTRIES), createdAt: new Date(now - Math.floor(r() * 790) * DAY), isActive: true };
   });
-  const products = CATALOG.map(([name, category, priceCents], i) => ({ id: i + 1, name, category, priceCents }));
+  const products = CATALOG.map(([name, category, priceCents], i) => ({ id: i + 1, name, category, priceCents, stockQuantity: 3 + ((i * 37) % 70), isActive: true }));
   const orders: { id: number; customerId: number; status: "pending" | "paid" | "shipped" | "refunded"; totalCents: number; createdAt: Date }[] = [];
   const items: { orderId: number; productId: number; quantity: number; unitCents: number }[] = [];
   let id = 0;

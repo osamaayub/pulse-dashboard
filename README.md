@@ -37,7 +37,16 @@ KPIs that compare with the last period, revenue charts, orders you can search, f
 | --- | --- |
 | **KPIs with context** | Revenue, orders, average order and new customers, each compared with the previous period |
 | **Date ranges** | 7 days, 30 days, 90 days or 12 months, kept in the URL (`?range=90d`) so a view can be shared |
-| **Charts** | Revenue over time (day, week or month buckets, gaps filled with zero) and revenue by category |
+| **Charts** | Switch between revenue and orders over time (day, week or month buckets, gaps filled with zero), plus revenue by category |
+| **Live overview** | Automatically refreshes every 30 seconds while the dashboard is visible; pause updates or refresh manually |
+| **Order pipeline** | See pending, paid, shipped and refunded order counts at a glance, with links to each filtered order list |
+| **Admin access** | Google OAuth and scrypt-backed email/password sign-in; invite-only signup, account lockouts and bootstrap administrator allowlist |
+| **Product management** | Create and edit products, update pricing, and archive items without breaking order history |
+| **Inventory** | Adjust on-hand stock, review low-stock alerts (10 units or fewer), and keep changes attributed in the audit log |
+| **Order management** | Apply validated status transitions from the admin workspace, with concurrent updates guarded in the database |
+| **Customer management** | Search, edit, and deactivate customer records while preserving historical orders |
+| **Audit log** | Review administrator, inventory, customer, product and order changes |
+| **Reports** | Twelve-month revenue and order trends, category breakdowns, status totals, and CSV export |
 | **Orders table** | Search by name, email or `#order`, filter by status, sort by date or total, 12 rows per page |
 | **All in SQL** | Filtering, sorting, counting and paging run in PostgreSQL; the browser gets one page of rows |
 | **Order page** | Line items, customer, progress, and **Mark shipped** / **Refund** Server Actions. The status check is inside the `UPDATE`, so double clicks are safe |
@@ -45,7 +54,7 @@ KPIs that compare with the last period, revenue charts, orders you can search, f
 | **Customer page** | Totals, full order history and spend by category |
 | **Products** | Units, revenue, change vs the previous period and share of revenue per product, filtered by date range and category |
 | **CSV export** | Downloads the current filtered view, with cells that spreadsheets can't run as formulas |
-| **Self-resetting demo** | Visitors can ship and refund freely: the sample store is replaced with a fresh copy every 24 hours (`DEMO_RESET_HOURS`), or right away with **Reset demo data** in the sidebar. Only sample data is ever reset |
+| **Self-resetting demo** | In demo mode, visitors can ship and refund sample orders: the sample store is replaced with a fresh copy every 24 hours (`DEMO_RESET_HOURS`), or right away with **Reset demo data** in the sidebar. Only sample data is ever reset |
 | **Real PostgreSQL** | `DATABASE_URL` or Netlify Database; creates its own tables and demo data on first start. Falls back to a built-in demo database |
 
 <table>
@@ -71,6 +80,28 @@ npm run dev
 ```
 
 Open http://localhost:3000. With no `.env.local`, the app runs on a built-in demo database (PGlite: PostgreSQL compiled to WebAssembly), seeded with two years of orders. Nothing to install, but changes reset when the server restarts.
+
+## Configure admin access
+
+The demo dashboard stays available without OAuth. When a real database is configured, dashboard routes and order exports are locked until administrator authentication is configured.
+
+1. Create a Google OAuth web client and add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI (add your deployed URL with the same `/api/auth/callback/google` path too).
+2. Set these server-side environment variables in `.env.local` or your hosting provider:
+
+   ```text
+   AUTH_SECRET=<a long random secret; generate with npx auth secret>
+   AUTH_GOOGLE_ID=<Google OAuth client ID>
+   AUTH_GOOGLE_SECRET=<Google OAuth client secret>
+   ADMIN_EMAILS=admin@example.com,another-admin@example.com
+   ```
+
+   If your trusted reverse proxy is not automatically recognized by Auth.js, also set `AUTH_TRUST_HOST=true`.
+
+3. Sign in through **Admin** using an email in `ADMIN_EMAILS`. Bootstrap administrators can invite teammates from **Admin → Team**. An invitation is bound to one email, expires after 24 hours, and can be accepted once. Invitees can set a 12–128 character password or use that email's verified Google account. Passwords are stored as scrypt hashes; failed password attempts are rate-limited with a temporary account lock. There is no email provider configured, so copy the generated link and share it securely; only its hash is stored. Never expose these values as `NEXT_PUBLIC_*` variables.
+
+New admin and invitation tables are created by the app's normal database setup. Existing Netlify databases can apply [migration 0004](./netlify/database/migrations/0004_admin_invitations.sql) after [migration 0003](./netlify/database/migrations/0003_admin_features.sql), followed by [migration 0005](./netlify/database/migrations/0005_admin_password_auth.sql) for password sign-in and lockouts.
+
+Order status changes are internal records only: payment capture and actual refunds still require a connected payment provider. Inventory quantities are maintained by admins and are not automatically decremented by checkout.
 
 ## Use your own PostgreSQL
 

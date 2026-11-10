@@ -3,10 +3,10 @@ import { pct } from "@/lib/format";
 
 export function Panel({ title, action, children, className = "" }: { title?: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <section className={`min-w-0 rounded-2xl border border-line bg-panel p-4 sm:p-5 ${className}`}>
+    <section className={`min-w-0 rounded-2xl border border-line/90 bg-panel p-4 shadow-[0_8px_24px_-20px_rgba(13,19,36,0.28)] sm:rounded-[20px] sm:p-5 ${className}`}>
       {title && (
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-[15px] font-semibold">{title}</h2>
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em]">{title}</h2>
           {action}
         </div>
       )}

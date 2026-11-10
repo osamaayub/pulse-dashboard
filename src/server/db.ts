@@ -1,6 +1,7 @@
 import "server-only";
 import { sql } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
+import { connection } from "next/server";
 import { DDL } from "./ddl";
 import { insertSample, resetSample, stampIfMissing } from "./demo";
 import { resetDue } from "./demo-rules";
@@ -43,6 +44,7 @@ const CHECK_EVERY_MS = 5 * 60_000;
 
 /** One connection pool (or demo database) per server instance, shared by every request. */
 export async function getDb() {
+  await connection();
   g.__pulseDb ??= (database.url ? connectPostgres(database.url) : demoDatabase()).catch((e) => {
     g.__pulseDb = undefined; // let the next request retry instead of caching the failure
     throw e;
