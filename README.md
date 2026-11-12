@@ -12,7 +12,7 @@ KPIs that compare with the last period, revenue charts, orders you can search, f
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-[**Watch the build on YouTube**](https://www.youtube.com/@osamaayubdev) · [Run it locally](#quick-start) · [Deploy](#deploy)
+[**Watch the build on YouTube**](https://youtu.be/VS5ceHq3CNg) · [Run it locally](#quick-start) · [Deploy](#deploy)
 
 ![Switching date ranges, then searching, filtering and sorting orders](docs/demo.gif)
 
